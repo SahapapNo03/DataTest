@@ -1,1 +1,46 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import streamlit as st
+
+# โหลดข้อมูล
+file_path = "/mnt/data/ข้อมูลบุคลากรโรงพยาบาลส่งเสริมสุขภาพตำบล (การตอบกลับ).xlsx"
+df = pd.read_excel(file_path, sheet_name='การตอบแบบฟอร์ม 1')
+
+df = df.rename(columns={
+    'เพศ': 'Gender',
+    'ข้าราชการ/ลูกจ้าง': 'Employment Type',
+    'ตำแหน่ง': 'Position',
+    'อำเภอในจังหวัดสุพรรณบุรี': 'District'
+})
+
+# สร้าง Dashboard
+st.title("Dashboard บุคลากร รพ.สต.")
+
+# ฟิลเตอร์ข้อมูล
+gender_filter = st.multiselect("เลือกเพศ", options=df["Gender"].unique(), default=df["Gender"].unique())
+emp_type_filter = st.multiselect("เลือกประเภทการจ้างงาน", options=df["Employment Type"].unique(), default=df["Employment Type"].unique())
+district_filter = st.multiselect("เลือกอำเภอ", options=df["District"].unique(), default=df["District"].unique())
+
+filtered_df = df[(df["Gender"].isin(gender_filter)) & (df["Employment Type"].isin(emp_type_filter)) & (df["District"].isin(district_filter))]
+
+# แสดงข้อมูลสรุป
+st.subheader("สรุปข้อมูลบุคลากร")
+st.write(f"จำนวนบุคลากรทั้งหมด: {len(filtered_df)} คน")
+
+# กราฟแสดงจำนวนบุคลากรแยกตามตำแหน่ง
+st.subheader("จำนวนบุคลากรตามตำแหน่ง")
+plt.figure(figsize=(10, 5))
+sns.countplot(y=filtered_df["Position"], order=filtered_df["Position"].value_counts().index)
+st.pyplot(plt)
+
+# กราฟวงกลมแสดงสัดส่วนประเภทการจ้างงาน
+st.subheader("สัดส่วนประเภทการจ้างงาน")
+fig, ax = plt.subplots()
+filtered_df["Employment Type"].value_counts().plot.pie(autopct="%1.1f%%", ax=ax)
+st.pyplot(fig)
+
+# ตารางแสดงข้อมูลบุคลากร
+st.subheader("ตารางข้อมูลบุคลากร")
+st.dataframe(filtered_df)
 
